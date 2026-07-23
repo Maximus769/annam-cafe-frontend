@@ -40,7 +40,7 @@ type CartItem = { sku: string; name: string; price: number; qty: number };
 export default function Home() {
   const [cart, setCart]           = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen]   = useState(false);
-  const [step, setStep]           = useState<"cart"|"form"|"paying">("cart");
+  const [step, setStep]           = useState<"cart"|"review"|"form"|"paying">("cart");
   const [email, setEmail]         = useState("");
   const [sending, setSending]     = useState(false);
   const [waitEmail, setWaitEmail] = useState("");
@@ -336,7 +336,7 @@ export default function Home() {
           padding:"18px 24px", borderBottom:`1px solid ${C.br1}`, flexShrink:0,
         }}>
           <h2 style={{ fontSize:"14px", letterSpacing:".2em", textTransform:"uppercase", fontWeight:400, margin:0 }}>
-            {step==="paying" ? "Redirection…" : step==="form" ? "Finaliser" : `Mon panier${count>0?` (${count})`:"" }`}
+            {step==="paying" ? "Redirection…" : step==="form" ? "Paiement" : step==="review" ? "Récapitulatif" : `Mon panier${count>0?` (${count})`:"" }`}
           </h2>
           <button onClick={() => setCartOpen(false)} style={{
             background:"none", border:"none", color:C.dim,
@@ -405,7 +405,7 @@ export default function Home() {
                   <span style={{ fontSize:"15px", color:C.cream }}>Total</span>
                   <span style={{ fontSize:"24px", color:C.cream }}>€{total}</span>
                 </div>
-                <button onClick={() => setStep("form")} style={{
+                <button onClick={() => setStep("review")} style={{
                   width:"100%", padding:"15px", background:C.br2,
                   border:"none", color:C.cream, fontSize:"12px",
                   letterSpacing:".2em", textTransform:"uppercase",
@@ -418,23 +418,115 @@ export default function Home() {
           </>
         )}
 
+        {/* ─ STEP REVIEW ─ */}
+        {step==="review" && (
+          <>
+            <div style={{ flex:1, overflowY:"auto", padding:"20px 24px" }}>
+              <p style={{ fontSize:"9px", letterSpacing:".35em", color:C.gold2, textTransform:"uppercase", marginBottom:"16px" }}>
+                Vérifiez votre commande
+              </p>
+
+              {/* Products table */}
+              <div style={{ border:`1px solid ${C.br1}` }}>
+                {/* Header */}
+                <div style={{
+                  display:"grid", gridTemplateColumns:"1fr auto auto",
+                  padding:"8px 14px", background:C.bg3,
+                  borderBottom:`1px solid ${C.br1}`,
+                  fontSize:"9px", letterSpacing:".2em", color:C.gold2, textTransform:"uppercase",
+                }}>
+                  <span>Produit</span>
+                  <span style={{ textAlign:"center", minWidth:"60px" }}>Qté</span>
+                  <span style={{ textAlign:"right", minWidth:"60px" }}>Total</span>
+                </div>
+
+                {/* Rows */}
+                {cart.map((item) => {
+                  const prod = PRODUCTS.find(p => p.sku === item.sku)!;
+                  return (
+                    <div key={item.sku} style={{
+                      display:"grid", gridTemplateColumns:"1fr auto auto",
+                      padding:"14px", borderBottom:`1px solid ${C.br1}`,
+                      alignItems:"center",
+                    }}>
+                      <div>
+                        <p style={{ fontSize:"15px", color:C.cream, margin:0, marginBottom:"3px" }}>{item.name}</p>
+                        <p style={{ fontSize:"9px", color:C.gold2, margin:0, letterSpacing:".1em" }}>{prod.origin}</p>
+                        <p style={{ fontSize:"11px", color:C.dim, margin:0 }}>€{item.price} / sachet</p>
+                      </div>
+
+                      {/* Qty controls inline */}
+                      <div style={{ display:"flex", alignItems:"center", border:`1px solid ${C.br1}`, margin:"0 16px" }}>
+                        <button onClick={() => updateQty(item.sku, -1)} style={{
+                          background:"none", border:"none", color:C.cream, cursor:"pointer",
+                          width:"28px", height:"28px", fontSize:"16px",
+                          borderRight:`1px solid ${C.br1}`, fontFamily:"Georgia,serif",
+                        }}>−</button>
+                        <span style={{ width:"28px", textAlign:"center", color:C.cream, fontSize:"14px" }}>{item.qty}</span>
+                        <button onClick={() => updateQty(item.sku, +1)} style={{
+                          background:"none", border:"none", color:C.cream, cursor:"pointer",
+                          width:"28px", height:"28px", fontSize:"16px",
+                          borderLeft:`1px solid ${C.br1}`, fontFamily:"Georgia,serif",
+                        }}>+</button>
+                      </div>
+
+                      <span style={{ fontSize:"16px", color:C.cream, textAlign:"right", minWidth:"60px" }}>
+                        €{item.price * item.qty}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {/* Total row */}
+                <div style={{
+                  display:"flex", justifyContent:"space-between", alignItems:"center",
+                  padding:"14px 14px", background:C.bg3,
+                }}>
+                  <div>
+                    <span style={{ fontSize:"13px", color:C.dim }}>Livraison </span>
+                    <span style={{ fontSize:"13px", color: total>=60 ? "#7ab85a" : C.gold }}>
+                      {total>=60 ? "offerte ✓" : `offerte dès €60`}
+                    </span>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <p style={{ fontSize:"10px", color:C.dim2, margin:0, marginBottom:"2px" }}>Total</p>
+                    <p style={{ fontSize:"24px", color:C.cream, margin:0 }}>€{total}</p>
+                  </div>
+                </div>
+              </div>
+
+              <p style={{ fontSize:"11px", color:C.dim2, marginTop:"16px", lineHeight:1.7 }}>
+                Sachet 250g · Café torréfié artisanalement au Vietnam · Livraison 5–8j
+              </p>
+            </div>
+
+            <div style={{ padding:"16px 24px", borderTop:`1px solid ${C.br1}`, display:"flex", flexDirection:"column", gap:"10px", flexShrink:0 }}>
+              <button onClick={() => setStep("form")} style={{
+                width:"100%", padding:"15px", background:C.br2,
+                border:"none", color:C.cream, fontSize:"12px",
+                letterSpacing:".2em", textTransform:"uppercase",
+                cursor:"pointer", fontFamily:"Georgia,serif",
+              }}>
+                Procéder au paiement →
+              </button>
+              <button onClick={() => setStep("cart")} style={{
+                background:"none", border:"none", color:C.dim,
+                cursor:"pointer", fontSize:"12px", fontFamily:"Georgia,serif", padding:"4px",
+              }}>
+                ← Modifier le panier
+              </button>
+            </div>
+          </>
+        )}
+
         {/* ─ STEP FORM ─ */}
         {step==="form" && (
           <>
             <div style={{ flex:1, overflowY:"auto", padding:"24px" }}>
-              {/* Récap */}
-              <div style={{ background:C.bg3, border:`1px solid ${C.br1}`, padding:"16px 20px", marginBottom:"24px" }}>
-                <p style={{ fontSize:"9px", letterSpacing:".3em", color:C.gold2, textTransform:"uppercase", marginBottom:"10px" }}>Récapitulatif</p>
-                {cart.map(i => (
-                  <div key={i.sku} style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px" }}>
-                    <span style={{ fontSize:"13px", color:C.dim }}>{i.name} × {i.qty}</span>
-                    <span style={{ fontSize:"13px", color:C.cream }}>€{i.price*i.qty}</span>
-                  </div>
-                ))}
-                <div style={{ borderTop:`1px solid ${C.br1}`, marginTop:"10px", paddingTop:"10px", display:"flex", justifyContent:"space-between" }}>
-                  <span style={{ color:C.cream }}>Total</span>
-                  <span style={{ fontSize:"20px", color:C.cream }}>€{total}</span>
-                </div>
+              {/* Mini recap */}
+              <div style={{ background:C.bg3, border:`1px solid ${C.br1}`, padding:"10px 14px", marginBottom:"20px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span style={{ fontSize:"12px", color:C.dim }}>{count} article{count>1?"s":""}</span>
+                <span style={{ fontSize:"18px", color:C.cream }}>€{total}</span>
               </div>
 
               <label style={{ fontSize:"10px", letterSpacing:".25em", color:C.gold2, textTransform:"uppercase", display:"block", marginBottom:"8px" }}>
