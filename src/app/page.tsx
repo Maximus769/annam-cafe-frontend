@@ -1,5 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+
+const CART_KEY = "annam_cart";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://ca-phe-viet.onrender.com";
 
@@ -45,6 +47,34 @@ export default function Home() {
   const [waitDone, setWaitDone]   = useState(false);
   const [flash, setFlash]         = useState<string|null>(null);
   const [stripeErr, setStripeErr] = useState("");
+  const [savedBanner, setSavedBanner] = useState(false);
+  const mounted = useRef(false);
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CART_KEY);
+      if (saved) {
+        const parsed: CartItem[] = JSON.parse(saved);
+        if (parsed.length > 0) {
+          setCart(parsed);
+          setSavedBanner(true);
+          setTimeout(() => setSavedBanner(false), 4000);
+        }
+      }
+    } catch {}
+    mounted.current = true;
+  }, []);
+
+  // Save cart to localStorage on every change (after mount)
+  useEffect(() => {
+    if (!mounted.current) return;
+    if (cart.length > 0) {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    } else {
+      localStorage.removeItem(CART_KEY);
+    }
+  }, [cart]);
 
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const count = cart.reduce((s, i) => s + i.qty, 0);
@@ -83,6 +113,7 @@ export default function Home() {
       const data = await res.json();
       if (data.url) {
         setStep("paying");
+        localStorage.removeItem(CART_KEY);
         window.location.href = data.url;
       } else {
         setStripeErr(data.error || "Erreur de paiement. Réessayez.");
@@ -147,6 +178,24 @@ export default function Home() {
           )}
         </button>
       </nav>
+
+      {/* ── SAVED CART BANNER ── */}
+      {savedBanner && (
+        <div style={{
+          background:"#1a0d06", borderBottom:`1px solid ${C.br2}`,
+          padding:"10px 24px", display:"flex", alignItems:"center",
+          justifyContent:"space-between", gap:"12px",
+        }}>
+          <span style={{ fontSize:"13px", color:C.gold }}>
+            ☕ Votre panier vous attend — {cart.reduce((s,i)=>s+i.qty,0)} article{cart.reduce((s,i)=>s+i.qty,0)>1?"s":""}
+          </span>
+          <button onClick={() => { setCartOpen(true); setSavedBanner(false); }} style={{
+            background:C.br2, border:"none", color:C.cream,
+            padding:"6px 16px", cursor:"pointer", fontSize:"11px",
+            letterSpacing:".12em", textTransform:"uppercase", fontFamily:"Georgia,serif",
+          }}>Voir →</button>
+        </div>
+      )}
 
       {/* ── HERO ── */}
       <section style={{
