@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-
-const CART_KEY = "annam_cart";
+import Link from "next/link";
+import { CART_KEY } from "@/lib/cart";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://ca-phe-viet.onrender.com";
 
@@ -405,14 +405,15 @@ export default function Home() {
                   <span style={{ fontSize:"15px", color:C.cream }}>Total</span>
                   <span style={{ fontSize:"24px", color:C.cream }}>€{total}</span>
                 </div>
-                <button onClick={() => setStep("review")} style={{
-                  width:"100%", padding:"15px", background:C.br2,
+                <Link href="/cart" onClick={() => setCartOpen(false)} style={{
+                  display:"block", width:"100%", padding:"15px", background:C.br2,
                   border:"none", color:C.cream, fontSize:"12px",
                   letterSpacing:".2em", textTransform:"uppercase",
                   cursor:"pointer", fontFamily:"Georgia,serif",
+                  textDecoration:"none", textAlign:"center", boxSizing:"border-box",
                 }}>
-                  Commander →
-                </button>
+                  Voir mon panier →
+                </Link>
               </div>
             )}
           </>
